@@ -1,14 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import LoginTemplate from '../components/templates/LoginTemplate';
 
 const LoginPage = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
   const handleLogin = (event) => {
     event.preventDefault();
     const email = event.target.email.value;
     const password = event.target.password.value;
     
     if (email && password) {
-      alert('Login Berhasil');
+      setIsLoggedIn(true);
+      window.location.href = '/admin';
     } else {
       alert('Login Gagal');
     }

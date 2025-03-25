@@ -1,6 +1,6 @@
 import React from 'react';
 import FormGroup from '../molecules/FormGroup';
-import Button from '../atoms/Button';
+import LoginButton from '../atoms/LoginButton';
 
 const LoginForm = ({ onSubmit }) => {
   return (
@@ -30,7 +30,7 @@ const LoginForm = ({ onSubmit }) => {
           Lupa Password
         </a>
       </div>
-      <Button type="submit">Login</Button>
+      <LoginButton type="submit">Login</LoginButton>
       <p className="text-sm text-center text-gray-700 mt-4">
         Belum punya akun?
         <a href="#" className="text-blue-600 hover:underline ml-1">
