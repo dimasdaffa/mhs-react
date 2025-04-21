@@ -1,19 +1,25 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import LoginTemplate from '../components/templates/LoginTemplate';
+import users from '../data/users.json';
 
 const LoginPage = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
 
   const handleLogin = (event) => {
     event.preventDefault();
     const email = event.target.email.value;
     const password = event.target.password.value;
     
-    if (email && password) {
-      setIsLoggedIn(true);
-      window.location.href = '/admin';
+    const user = users.users.find(
+      (u) => u.email === email && u.password === password
+    );
+
+    if (user) {
+      localStorage.setItem('isLoggedIn', 'true');
+      navigate('/admin/dashboard');
     } else {
-      alert('Login Gagal');
+      alert('Email atau password salah!');
     }
   };
 

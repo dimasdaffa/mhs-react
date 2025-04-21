@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import TableHeader from '../atoms/TableHeader';
 import TableCell from '../atoms/TableCell';
 import AdminButton from '../atoms/AdminButton';
@@ -16,7 +17,14 @@ const MahasiswaTable = ({ mahasiswa, onEdit, onDelete }) => {
       <tbody>
         {mahasiswa.map((mhs) => (
           <tr key={mhs.nim} className="border">
-            <TableCell>{mhs.nim}</TableCell>
+            <TableCell>
+              <Link 
+                to={`/admin/mahasiswa/${mhs.nim}`}
+                className="text-blue-600 hover:underline"
+              >
+                {mhs.nim}
+              </Link>
+            </TableCell>
             <TableCell>{mhs.nama}</TableCell>
             <TableCell>
               <div className="space-x-2">
