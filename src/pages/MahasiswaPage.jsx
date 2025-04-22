@@ -21,32 +21,34 @@ const MahasiswaPage = () => {
     setIsModalOpen(false);
   };
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    const formData = new FormData(event.target);
+  const handleSubmit = (formData) => {
     const newMahasiswa = {
       id: selectedMahasiswa?.id || Date.now(),
-      nim: formData.get('nim'),
-      nama: formData.get('nama'),
-      status: formData.get('status') === 'true',
+      nim: formData.nim,
+      nama: formData.nama,
+      status: formData.status === 'true'
     };
 
     if (selectedMahasiswa) {
-      setMahasiswa(mahasiswa.map(m => 
-        m.id === selectedMahasiswa.id ? newMahasiswa : m
-      ));
+      if (window.confirm('Apakah Anda yakin ingin mengubah data mahasiswa ini?')) {
+        setMahasiswa(mahasiswa.map(m => 
+          m.id === selectedMahasiswa.id ? newMahasiswa : m
+        ));
+        handleCloseModal();
+      }
     } else {
       setMahasiswa([...mahasiswa, newMahasiswa]);
+      handleCloseModal();
     }
-
-    handleCloseModal();
   };
 
   const handleDelete = (id) => {
-    if (window.confirm('Apakah Anda yakin ingin menghapus data ini?')) {
+    if (window.confirm('Apakah Anda yakin ingin menghapus data mahasiswa ini?')) {
       setMahasiswa(mahasiswa.filter(m => m.id !== id));
     }
   };
+
+  const existingNIMs = mahasiswa.map(m => m.nim);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -107,6 +109,7 @@ const MahasiswaPage = () => {
         onClose={handleCloseModal}
         onSubmit={handleSubmit}
         mahasiswaData={selectedMahasiswa}
+        existingNIMs={existingNIMs}
       />
     </div>
   );

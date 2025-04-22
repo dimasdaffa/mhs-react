@@ -1,6 +1,69 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
-const MahasiswaModal = ({ isOpen, onClose, onSubmit, mahasiswaData }) => {
+const MahasiswaModal = ({ isOpen, onClose, onSubmit, mahasiswaData, existingNIMs }) => {
+  const [formData, setFormData] = useState({
+    nim: '',
+    nama: '',
+    status: 'true'
+  });
+  const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (mahasiswaData) {
+      setFormData({
+        nim: mahasiswaData.nim,
+        nama: mahasiswaData.nama,
+        status: mahasiswaData.status.toString()
+      });
+    } else {
+      setFormData({
+        nim: '',
+        nama: '',
+        status: 'true'
+      });
+    }
+    setErrors({});
+  }, [mahasiswaData]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.nim.trim()) {
+      newErrors.nim = 'NIM harus diisi';
+    } else if (existingNIMs.includes(formData.nim) && (!mahasiswaData || mahasiswaData.nim !== formData.nim)) {
+      newErrors.nim = 'NIM sudah terdaftar';
+    }
+
+    if (!formData.nama.trim()) {
+      newErrors.nama = 'Nama harus diisi';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (validateForm()) {
+      onSubmit(formData);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -9,7 +72,7 @@ const MahasiswaModal = ({ isOpen, onClose, onSubmit, mahasiswaData }) => {
         <h2 className="text-xl font-bold mb-4">
           {mahasiswaData ? 'Edit Mahasiswa' : 'Tambah Mahasiswa'}
         </h2>
-        <form onSubmit={onSubmit}>
+        <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2">
               NIM
@@ -17,10 +80,15 @@ const MahasiswaModal = ({ isOpen, onClose, onSubmit, mahasiswaData }) => {
             <input
               type="text"
               name="nim"
-              defaultValue={mahasiswaData?.nim}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
+              value={formData.nim}
+              onChange={handleChange}
+              className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+                errors.nim ? 'border-red-500' : ''
+              }`}
             />
+            {errors.nim && (
+              <p className="text-red-500 text-xs italic mt-1">{errors.nim}</p>
+            )}
           </div>
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2">
@@ -29,10 +97,15 @@ const MahasiswaModal = ({ isOpen, onClose, onSubmit, mahasiswaData }) => {
             <input
               type="text"
               name="nama"
-              defaultValue={mahasiswaData?.nama}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
+              value={formData.nama}
+              onChange={handleChange}
+              className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+                errors.nama ? 'border-red-500' : ''
+              }`}
             />
+            {errors.nama && (
+              <p className="text-red-500 text-xs italic mt-1">{errors.nama}</p>
+            )}
           </div>
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2">
@@ -40,7 +113,8 @@ const MahasiswaModal = ({ isOpen, onClose, onSubmit, mahasiswaData }) => {
             </label>
             <select
               name="status"
-              defaultValue={mahasiswaData?.status}
+              value={formData.status}
+              onChange={handleChange}
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             >
               <option value="true">Aktif</option>
