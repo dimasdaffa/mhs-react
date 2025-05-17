@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import LoginTemplate from '../components/templates/LoginTemplate';
 import users from '../data/users.json';
+import { showSuccessToast, showErrorToast } from '../helpers/toastHelper';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -17,9 +18,10 @@ const LoginPage = () => {
 
     if (user) {
       localStorage.setItem('isLoggedIn', 'true');
+      showSuccessToast('Login berhasil!');
       navigate('/admin/dashboard');
     } else {
-      alert('Email atau password salah!');
+      showErrorToast('Email atau password salah!');
     }
   };
 
