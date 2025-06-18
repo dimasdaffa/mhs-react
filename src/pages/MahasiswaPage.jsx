@@ -1,19 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import MahasiswaTable from '../components/organisms/MahasiswaTable';
-import AdminButton from '../components/atoms/AdminButton';
-import Modal from '../components/molecules/Modal';
-import FormGroup from '../components/molecules/FormGroup';
-import { getAllMahasiswa, storeMahasiswa, deleteMahasiswa, updateMahasiswa } from '../api/MahasiswaApi'; // <-- 1. Impor fungsi API
+// Di dalam file src/pages/MahasiswaPage.jsx
+
+import React, { useState, useEffect } from "react";
+import MahasiswaTable from "../components/organisms/MahasiswaTable";
+import AdminButton from "../components/atoms/AdminButton";
+import Modal from "../components/molecules/Modal";
+import FormGroup from "../components/molecules/FormGroup";
+import {
+  getAllMahasiswa,
+  storeMahasiswa,
+  deleteMahasiswa,
+  updateMahasiswa,
+} from "../api/MahasiswaApi";
+import { useAuth } from "../context/AuthContext"; // <-- Import useAuth
+import { confirmDeleteStudent } from "../helpers/swalHelper";
+import { showSuccessToast, showErrorToast } from "../helpers/toastHelper";
 
 const MahasiswaPage = () => {
   const [mahasiswa, setMahasiswa] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentMhs, setCurrentMhs] = useState(null);
 
-  // <-- 2. Fungsi untuk mengambil data dari API
+  const { user } = useAuth(); // <-- Dapatkan user dari context
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -25,8 +36,6 @@ const MahasiswaPage = () => {
       setLoading(false);
     }
   };
-
-  // <-- 3. Gunakan useEffect untuk memanggil API saat komponen dimuat
   useEffect(() => {
     fetchData();
   }, []);
@@ -36,19 +45,21 @@ const MahasiswaPage = () => {
     setCurrentMhs(null);
     setIsModalOpen(true);
   };
-
   const handleOpenEditModal = (mhs) => {
     setIsEditMode(true);
     setCurrentMhs(mhs);
     setIsModalOpen(true);
   };
-  
+
   const handleDelete = async (mhs) => {
-    if (window.confirm(`Apakah Anda yakin ingin menghapus ${mhs.nama}?`)) {
+    const result = await confirmDeleteStudent(mhs.nama);
+    if (result.isConfirmed) {
       try {
         await deleteMahasiswa(mhs.id);
-        fetchData(); // Ambil data lagi setelah berhasil hapus
+        showSuccessToast("Data berhasil dihapus!");
+        fetchData();
       } catch (error) {
+        showErrorToast("Gagal menghapus data.");
         console.error("Gagal menghapus data:", error);
       }
     }
@@ -60,17 +71,17 @@ const MahasiswaPage = () => {
     const data = Object.fromEntries(formData.entries());
 
     try {
-        if(isEditMode) {
-            await updateMahasiswa(currentMhs.id, data);
-        } else {
-            await storeMahasiswa(data);
-        }
-        fetchData(); // Refresh data
-        setIsModalOpen(false); // Tutup modal
+      if (isEditMode) {
+        await updateMahasiswa(currentMhs.id, data);
+      } else {
+        await storeMahasiswa(data);
+      }
+      fetchData(); // Refresh data
+      setIsModalOpen(false); // Tutup modal
     } catch (error) {
-        console.error("Gagal menyimpan data:", error);
+      console.error("Gagal menyimpan data:", error);
     }
-  }
+  };
 
   if (loading) {
     return <div>Loading...</div>;
@@ -82,46 +93,57 @@ const MahasiswaPage = () => {
       <div className="bg-white p-4 shadow rounded">
         <div className="flex justify-between mb-4">
           <h3 className="text-lg font-bold">Daftar Mahasiswa</h3>
-          <AdminButton onClick={handleOpenAddModal} variant="primary">
-            + Tambah Mahasiswa
-          </AdminButton>
+          {/* Tampilkan tombol hanya jika punya izin 'mahasiswa.create' */}
+          {user && user.permissions.includes("mahasiswa.create") && (
+            <AdminButton onClick={handleOpenAddModal} variant="primary">
+              + Tambah Mahasiswa
+            </AdminButton>
+          )}
         </div>
-        
-        <MahasiswaTable 
+
+        <MahasiswaTable
           mahasiswa={mahasiswa}
-          onEdit={handleOpenEditModal} // <-- Kirim fungsi edit
+          onEdit={handleOpenEditModal}
           onDelete={handleDelete}
+          permissions={user?.permissions || []} // <-- Kirim permissions ke table
         />
       </div>
-
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={isEditMode ? "Edit Mahasiswa" : "Tambah Mahasiswa"}
       >
         <form onSubmit={handleSubmit}>
-            <FormGroup
+          <FormGroup
             label="NIM"
             type="text"
             name="nim"
             id="nim"
             required
             placeholder="Masukkan NIM"
-            defaultValue={currentMhs?.nim || ''}
-            />
-            <FormGroup
+            defaultValue={currentMhs?.nim || ""}
+          />
+          <FormGroup
             label="Nama"
             type="text"
             name="nama"
             id="nama"
             required
             placeholder="Masukkan Nama"
-            defaultValue={currentMhs?.nama || ''}
-            />
-            <div className="flex justify-end space-x-2 mt-4">
-                <AdminButton type="button" onClick={() => setIsModalOpen(false)} variant="secondary">Batal</AdminButton>
-                <AdminButton type="submit" variant="primary">Simpan</AdminButton>
-            </div>
+            defaultValue={currentMhs?.nama || ""}
+          />
+          <div className="flex justify-end space-x-2 mt-4">
+            <AdminButton
+              type="button"
+              onClick={() => setIsModalOpen(false)}
+              variant="secondary"
+            >
+              Batal
+            </AdminButton>
+            <AdminButton type="submit" variant="primary">
+              Simpan
+            </AdminButton>
+          </div>
         </form>
       </Modal>
     </div>

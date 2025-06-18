@@ -4,7 +4,8 @@ import TableHeader from '../atoms/TableHeader';
 import TableCell from '../atoms/TableCell';
 import AdminButton from '../atoms/AdminButton';
 
-const MahasiswaTable = ({ mahasiswa, onEdit, onDelete }) => {
+// Terima props 'permissions'
+const MahasiswaTable = ({ mahasiswa, onEdit, onDelete, permissions }) => {
   return (
     <table className="w-full border-collapse">
       <thead>
@@ -16,7 +17,7 @@ const MahasiswaTable = ({ mahasiswa, onEdit, onDelete }) => {
       </thead>
       <tbody>
         {mahasiswa.map((mhs) => (
-          <tr key={mhs.nim} className="border">
+          <tr key={mhs.id} className="border">
             <TableCell>
               <Link 
                 to={`/admin/mahasiswa/${mhs.nim}`}
@@ -25,23 +26,28 @@ const MahasiswaTable = ({ mahasiswa, onEdit, onDelete }) => {
                 {mhs.nim}
               </Link>
             </TableCell>
-            <TableCell>{mhs.nama}</TableCell>
             <TableCell>
               <div className="space-x-2">
-                <AdminButton
-                  variant="warning"
-                  onClick={() => onEdit(mhs)}
-                  className="px-2 py-1"
-                >
-                  Edit
-                </AdminButton>
-                <AdminButton
-                  variant="danger"
-                  onClick={() => onDelete(mhs)}
-                  className="px-2 py-1"
-                >
-                  Hapus
-                </AdminButton>
+                {/* Tampilkan tombol Edit jika punya izin 'mahasiswa.update' */}
+                {permissions.includes('mahasiswa.update') && (
+                  <AdminButton
+                    variant="warning"
+                    onClick={() => onEdit(mhs)}
+                    className="px-2 py-1"
+                  >
+                    Edit
+                  </AdminButton>
+                )}
+                {/* Tampilkan tombol Hapus jika punya izin 'mahasiswa.delete' */}
+                {permissions.includes('mahasiswa.delete') && (
+                  <AdminButton
+                    variant="danger"
+                    onClick={() => onDelete(mhs)}
+                    className="px-2 py-1"
+                  >
+                    Hapus
+                  </AdminButton>
+                )}
               </div>
             </TableCell>
           </tr>
@@ -51,4 +57,4 @@ const MahasiswaTable = ({ mahasiswa, onEdit, onDelete }) => {
   );
 };
 
-export default MahasiswaTable; 
+export default MahasiswaTable;
