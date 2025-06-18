@@ -1,86 +1,80 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MahasiswaTable from '../components/organisms/MahasiswaTable';
 import AdminButton from '../components/atoms/AdminButton';
 import Modal from '../components/molecules/Modal';
 import FormGroup from '../components/molecules/FormGroup';
-import { confirmDeleteStudent, confirmSaveChanges } from '../helpers/swalHelper';
-import { showSuccessToast, showErrorToast } from '../helpers/toastHelper';
-// 
-const MahasiswaPage = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingMahasiswa, setEditingMahasiswa] = useState(null);
-  const [mahasiswa, setMahasiswa] = useState([
-    { nim: 'A11.2022.14079', nama: 'Supardo' },
-    { nim: 'A11.2022.14080', nama: 'Supardi' },
-    { nim: 'A11.2022.14081', nama: 'Sapardi' },
-  ]);
+import { getAllMahasiswa, storeMahasiswa, deleteMahasiswa, updateMahasiswa } from '../api/MahasiswaApi'; // <-- 1. Impor fungsi API
 
-  const handleEdit = (mhs) => {
-    setEditingMahasiswa(mhs);
+const MahasiswaPage = () => {
+  const [mahasiswa, setMahasiswa] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [currentMhs, setCurrentMhs] = useState(null);
+
+  // <-- 2. Fungsi untuk mengambil data dari API
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const response = await getAllMahasiswa();
+      setMahasiswa(response.data);
+    } catch (error) {
+      console.error("Gagal mengambil data mahasiswa:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // <-- 3. Gunakan useEffect untuk memanggil API saat komponen dimuat
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleOpenAddModal = () => {
+    setIsEditMode(false);
+    setCurrentMhs(null);
     setIsModalOpen(true);
   };
 
+  const handleOpenEditModal = (mhs) => {
+    setIsEditMode(true);
+    setCurrentMhs(mhs);
+    setIsModalOpen(true);
+  };
+  
   const handleDelete = async (mhs) => {
-    const result = await confirmDeleteStudent(mhs.nama);
-    if (result.isConfirmed) {
-      setMahasiswa(mahasiswa.filter(m => m.nim !== mhs.nim));
-      showSuccessToast('Data mahasiswa berhasil dihapus!');
+    if (window.confirm(`Apakah Anda yakin ingin menghapus ${mhs.nama}?`)) {
+      try {
+        await deleteMahasiswa(mhs.id);
+        fetchData(); // Ambil data lagi setelah berhasil hapus
+      } catch (error) {
+        console.error("Gagal menghapus data:", error);
+      }
     }
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     const formData = new FormData(event.target);
-    const nim = formData.get('nim');
-    const nama = formData.get('nama');
+    const data = Object.fromEntries(formData.entries());
 
-    // Validasi input
-    if (!nim || !nama) {
-      showErrorToast('NIM dan Nama harus diisi!');
-      return;
+    try {
+        if(isEditMode) {
+            await updateMahasiswa(currentMhs.id, data);
+        } else {
+            await storeMahasiswa(data);
+        }
+        fetchData(); // Refresh data
+        setIsModalOpen(false); // Tutup modal
+    } catch (error) {
+        console.error("Gagal menyimpan data:", error);
     }
+  }
 
-    // Validasi NIM format
-    if (!nim.match(/^[A-Z]\d{2}\.\d{4}\.\d{5}$/)) {
-      showErrorToast('Format NIM tidak valid! Contoh: A11.2022.14079');
-      return;
-    }
-
-    // Cek NIM duplikat (kecuali jika sedang edit)
-    if (!editingMahasiswa && mahasiswa.some(m => m.nim === nim)) {
-      showErrorToast('NIM sudah terdaftar!');
-      return;
-    }
-
-    const result = await confirmSaveChanges();
-    if (result.isConfirmed) {
-      const newMahasiswa = {
-        nim: nim,
-        nama: nama,
-      };
-      
-      if (editingMahasiswa) {
-        // Update data yang sudah ada
-        setMahasiswa(mahasiswa.map(m => 
-          m.nim === editingMahasiswa.nim ? newMahasiswa : m
-        ));
-        showSuccessToast('Data mahasiswa berhasil diperbarui!');
-      } else {
-        // Tambah data baru
-        setMahasiswa([...mahasiswa, newMahasiswa]);
-        showSuccessToast('Data mahasiswa berhasil ditambahkan!');
-      }
-      
-      setIsModalOpen(false);
-      setEditingMahasiswa(null);
-      event.target.reset();
-    }
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setEditingMahasiswa(null);
-  };
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div>
@@ -88,51 +82,50 @@ const MahasiswaPage = () => {
       <div className="bg-white p-4 shadow rounded">
         <div className="flex justify-between mb-4">
           <h3 className="text-lg font-bold">Daftar Mahasiswa</h3>
-          <AdminButton 
-            onClick={() => {
-              setEditingMahasiswa(null);
-              setIsModalOpen(true);
-            }}
-            variant="primary"
-          >
+          <AdminButton onClick={handleOpenAddModal} variant="primary">
             + Tambah Mahasiswa
           </AdminButton>
         </div>
         
         <MahasiswaTable 
           mahasiswa={mahasiswa}
-          onEdit={handleEdit}
+          onEdit={handleOpenEditModal} // <-- Kirim fungsi edit
           onDelete={handleDelete}
         />
       </div>
 
       <Modal
         isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        title={editingMahasiswa ? "Edit Mahasiswa" : "Tambah Mahasiswa"}
-        onSubmit={handleSubmit}
+        onClose={() => setIsModalOpen(false)}
+        title={isEditMode ? "Edit Mahasiswa" : "Tambah Mahasiswa"}
       >
-        <FormGroup
-          label="NIM"
-          type="text"
-          name="nim"
-          id="nim"
-          required
-          placeholder="Masukkan NIM (contoh: A11.2022.14079)"
-          defaultValue={editingMahasiswa?.nim}
-        />
-        <FormGroup
-          label="Nama"
-          type="text"
-          name="nama"
-          id="nama"
-          required
-          placeholder="Masukkan Nama"
-          defaultValue={editingMahasiswa?.nama}
-        />
+        <form onSubmit={handleSubmit}>
+            <FormGroup
+            label="NIM"
+            type="text"
+            name="nim"
+            id="nim"
+            required
+            placeholder="Masukkan NIM"
+            defaultValue={currentMhs?.nim || ''}
+            />
+            <FormGroup
+            label="Nama"
+            type="text"
+            name="nama"
+            id="nama"
+            required
+            placeholder="Masukkan Nama"
+            defaultValue={currentMhs?.nama || ''}
+            />
+            <div className="flex justify-end space-x-2 mt-4">
+                <AdminButton type="button" onClick={() => setIsModalOpen(false)} variant="secondary">Batal</AdminButton>
+                <AdminButton type="submit" variant="primary">Simpan</AdminButton>
+            </div>
+        </form>
       </Modal>
     </div>
   );
 };
 
-export default MahasiswaPage; 
+export default MahasiswaPage;
