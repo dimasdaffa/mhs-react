@@ -1,13 +1,13 @@
-import React, { useEffect } from 'react'; // Import useEffect
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import LoginTemplate from '../components/templates/LoginTemplate';
-import { loginUser } from '../api/MahasiswaApi';
-import { useAuth } from '../context/AuthContext'; // <-- 1. Import useAuth
+import { loginUser } from '../api/UserApi'; // Update to use UserApi instead of MahasiswaApi
+import { useAuth } from '../context/AuthContext';
 import { showErrorToast } from '../helpers/toastHelper';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login, user } = useAuth(); // <-- 2. Gunakan useAuth
+  const { login, user } = useAuth();
 
   // Redirect jika sudah login
   useEffect(() => {
@@ -22,11 +22,11 @@ const LoginPage = () => {
     const password = event.target.password.value;
     
     try {
-      const response = await loginUser(email, password);
+      const response = await loginUser({ email, password });
       
       if (response.data.length > 0) {
         const userData = response.data[0];
-        login(userData); // <-- 3. Panggil fungsi login dari context
+        login(userData);
         navigate('/admin/dashboard');
       } else {
         showErrorToast('Email atau password salah!');
@@ -38,8 +38,24 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <LoginTemplate onSubmit={handleLogin} />
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Masuk ke Akun Anda
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Atau{' '}
+            <Link
+              to="/register"
+              className="font-medium text-indigo-600 hover:text-indigo-500"
+            >
+              daftar akun baru
+            </Link>
+          </p>
+        </div>
+        <LoginTemplate onSubmit={handleLogin} />
+      </div>
     </div>
   );
 };
