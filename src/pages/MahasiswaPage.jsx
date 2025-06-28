@@ -1,26 +1,33 @@
 // Di dalam file src/pages/MahasiswaPage.jsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import MahasiswaTable from "../components/organisms/MahasiswaTable";
 import AdminButton from "../components/atoms/AdminButton";
 import Modal from "../components/molecules/Modal";
 import FormGroup from "../components/molecules/FormGroup";
-import {
-  getAllMahasiswa,
-  storeMahasiswa,
-  deleteMahasiswa,
-  updateMahasiswa,
-} from "../api/MahasiswaApi";
 import { useAuth } from "../context/AuthContext";
 import { confirmDeleteStudent } from "../helpers/swalHelper";
-import { showSuccessToast, showErrorToast } from "../helpers/toastHelper";
+import { showErrorToast } from "../helpers/toastHelper";
 import { formatDataWithId } from "../helpers/idHelper";
+import { 
+  useMahasiswa, 
+  useStoreMahasiswa, 
+  useUpdateMahasiswa, 
+  useDeleteMahasiswa 
+} from "../hooks/useMahasiswa";
+import { useMataKuliah } from "../hooks/useMataKuliah";
+import { useKelas } from "../hooks/useKelas";
 
 const MahasiswaPage = () => {
-  const [mahasiswa, setMahasiswa] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // React Query hooks
+  const { data: mahasiswa = [], isLoading: loading, error } = useMahasiswa();
+  const { data: kelas = [] } = useKelas();
+  const { data: mataKuliah = [] } = useMataKuliah();
+  const { mutate: store } = useStoreMahasiswa();
+  const { mutate: update } = useUpdateMahasiswa();
+  const { mutate: remove } = useDeleteMahasiswa();
 
+  // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentMhs, setCurrentMhs] = useState(null);
@@ -29,55 +36,41 @@ const MahasiswaPage = () => {
   // Form state for controlled components
   const [formData, setFormData] = useState({
     nim: '',
-    nama: ''
+    nama: '',
+    max_sks: 18
   });
 
   const { user } = useAuth();
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await getAllMahasiswa();
-      setMahasiswa(response.data);
-    } catch (error) {
-      console.error("Gagal mengambil data mahasiswa:", error);
-      setError("Gagal mengambil data mahasiswa. Silakan coba lagi.");
-      showErrorToast("Gagal mengambil data mahasiswa");
-    } finally {
-      setLoading(false);
-    }
+  const resetForm = () => {
+    setFormData({ nim: '', nama: '', max_sks: 18 });
+    setIsModalOpen(false);
+    setCurrentMhs(null);
+    setIsEditMode(false);
   };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   const handleOpenAddModal = () => {
     setIsEditMode(false);
     setCurrentMhs(null);
-    setFormData({ nim: '', nama: '' });
+    setFormData({ nim: '', nama: '', max_sks: 18 });
     setIsModalOpen(true);
   };
 
   const handleOpenEditModal = (mhs) => {
     setIsEditMode(true);
     setCurrentMhs(mhs);
-    setFormData({ nim: mhs.nim, nama: mhs.nama });
+    setFormData({ 
+      nim: mhs.nim, 
+      nama: mhs.nama, 
+      max_sks: mhs.max_sks || 18 
+    });
     setIsModalOpen(true);
   };
 
   const handleDelete = async (mhs) => {
     const result = await confirmDeleteStudent(mhs.nama);
     if (result.isConfirmed) {
-      try {
-        await deleteMahasiswa(mhs.id);
-        showSuccessToast("Data mahasiswa berhasil dihapus!");
-        fetchData();
-      } catch (error) {
-        showErrorToast("Gagal menghapus data mahasiswa.");
-        console.error("Gagal menghapus data:", error);
-      }
+      remove(mhs.id);
     }
   };
 
@@ -85,7 +78,7 @@ const MahasiswaPage = () => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: name === 'max_sks' ? parseInt(value) || 0 : value
     }));
   };
 
@@ -95,30 +88,31 @@ const MahasiswaPage = () => {
 
     try {
       if (isEditMode) {
-        await updateMahasiswa(currentMhs.id, formData);
-        showSuccessToast("Data mahasiswa berhasil diperbarui!");
+        update({ id: currentMhs.id, data: formData });
+        resetForm();
       } else {
+        // Check if NIM already exists
+        const exists = mahasiswa.find((m) => m.nim === formData.nim);
+        if (exists) {
+          showErrorToast("NIM sudah terdaftar!");
+          setSubmitting(false);
+          return;
+        }
+        
         // Format data with sequential ID before sending
         const dataWithId = formatDataWithId(formData, mahasiswa);
-        await storeMahasiswa(dataWithId);
-        showSuccessToast("Data mahasiswa berhasil ditambahkan!");
+        store(dataWithId);
+        resetForm();
       }
-      fetchData();
-      setIsModalOpen(false);
-      setFormData({ nim: '', nama: '' });
     } catch (error) {
-      console.error("Gagal menyimpan data:", error);
-      showErrorToast(isEditMode ? "Gagal memperbarui data mahasiswa" : "Gagal menambahkan data mahasiswa");
+      console.error("Error submitting form:", error);
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setCurrentMhs(null);
-    setIsEditMode(false);
-    setFormData({ nim: '', nama: '' });
+    resetForm();
   };
 
   if (loading) {
@@ -133,14 +127,8 @@ const MahasiswaPage = () => {
     return (
       <div className="p-6">
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
+          Gagal mengambil data mahasiswa. Silakan refresh halaman.
         </div>
-        <button 
-          onClick={fetchData}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          Coba Lagi
-        </button>
       </div>
     );
   }
@@ -200,6 +188,18 @@ const MahasiswaPage = () => {
             placeholder="Masukkan Nama"
             value={formData.nama}
             onChange={handleInputChange}
+          />
+          <FormGroup
+            label="Maksimal SKS"
+            type="number"
+            name="max_sks"
+            id="max_sks"
+            required
+            placeholder="Masukkan maksimal SKS"
+            value={formData.max_sks}
+            onChange={handleInputChange}
+            min="12"
+            max="24"
           />
           <div className="flex justify-end space-x-2 mt-6">
             <AdminButton

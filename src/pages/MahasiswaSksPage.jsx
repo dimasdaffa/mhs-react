@@ -1,37 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { getAllMahasiswa } from '../api/MahasiswaApi';
-import { getAllKelas } from '../api/KelasApi';
-import { getAllMataKuliah } from '../api/MataKuliahApi';
+import React from 'react';
+import { useMahasiswa } from '../hooks/useMahasiswa';
+import { useKelas } from '../hooks/useKelas';
+import { useMataKuliah } from '../hooks/useMataKuliah';
 
 const MahasiswaSksPage = () => {
-  const [mahasiswaList, setMahasiswaList] = useState([]);
-  const [kelasList, setKelasList] = useState([]);
-  const [mataKuliahList, setMataKuliahList] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    fetchAllData();
-  }, []);
-
-  const fetchAllData = async () => {
-    try {
-      setLoading(true);
-      const [mahasiswaRes, kelasRes, mataKuliahRes] = await Promise.all([
-        getAllMahasiswa(),
-        getAllKelas(),
-        getAllMataKuliah()
-      ]);
-      setMahasiswaList(mahasiswaRes.data);
-      setKelasList(kelasRes.data);
-      setMataKuliahList(mataKuliahRes.data);
-    } catch (err) {
-      setError('Gagal mengambil data');
-      console.error('Error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // React Query hooks - semua data akan di-fetch otomatis
+  const { data: mahasiswaList = [], isLoading: loading, error } = useMahasiswa();
+  const { data: kelasList = [] } = useKelas();
+  const { data: mataKuliahList = [] } = useMataKuliah();
 
   const getTotalSksMahasiswa = (mahasiswaId) => {
     return kelasList.reduce((total, kelas) => {
@@ -68,14 +44,8 @@ const MahasiswaSksPage = () => {
     return (
       <div className="p-6">
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
+          Gagal mengambil data. Silakan refresh halaman.
         </div>
-        <button 
-          onClick={fetchAllData}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          Coba Lagi
-        </button>
       </div>
     );
   }
