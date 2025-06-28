@@ -15,14 +15,32 @@ import {
   useUpdateMahasiswa, 
   useDeleteMahasiswa 
 } from "../hooks/useMahasiswa";
-import { useMataKuliah } from "../hooks/useMataKuliah";
-import { useKelas } from "../hooks/useKelas";
 
 const MahasiswaPage = () => {
-  // React Query hooks
-  const { data: mahasiswa = [], isLoading: loading, error } = useMahasiswa();
-  const { data: kelas = [] } = useKelas();
-  const { data: mataKuliah = [] } = useMataKuliah();
+  // Pagination, search, and sorting states
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(5);
+  const [sortBy, setSortBy] = useState("nama");
+  const [sortOrder, setSortOrder] = useState("asc");
+  const [search, setSearch] = useState("");
+
+  // React Query hooks with query parameters
+  const {
+    data: result = { data: [], total: 0 },
+    isLoading: loading,
+    error
+  } = useMahasiswa({
+    q: search,
+    _sort: sortBy,
+    _order: sortOrder,
+    _page: page,
+    _limit: perPage,
+  });
+
+  const { data: mahasiswa = [] } = result;
+  const totalCount = result.total;
+  const totalPages = Math.ceil(totalCount / perPage);
+
   const { mutate: store } = useStoreMahasiswa();
   const { mutate: update } = useUpdateMahasiswa();
   const { mutate: remove } = useDeleteMahasiswa();
@@ -41,6 +59,10 @@ const MahasiswaPage = () => {
   });
 
   const { user } = useAuth();
+
+  // Pagination handlers
+  const handlePrev = () => setPage((prev) => Math.max(prev - 1, 1));
+  const handleNext = () => setPage((prev) => Math.min(prev + 1, totalPages));
 
   const resetForm = () => {
     setFormData({ nim: '', nama: '', max_sks: 18 });
@@ -91,7 +113,7 @@ const MahasiswaPage = () => {
         update({ id: currentMhs.id, data: formData });
         resetForm();
       } else {
-        // Check if NIM already exists
+        // Check if NIM already exists (in current page data)
         const exists = mahasiswa.find((m) => m.nim === formData.nim);
         if (exists) {
           showErrorToast("NIM sudah terdaftar!");
@@ -147,9 +169,74 @@ const MahasiswaPage = () => {
           )}
         </div>
 
+        {/* Search, Sort, and Filter Controls */}
+        <div className="flex flex-wrap gap-4 mb-6">
+          {/* Search */}
+          <div className="flex-grow min-w-64">
+            <input
+              type="text"
+              placeholder="Cari nama/NIM..."
+              className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+            />
+          </div>
+
+          {/* Sort By Field */}
+          <select
+            value={sortBy}
+            onChange={(e) => {
+              setSortBy(e.target.value);
+              setPage(1);
+            }}
+            className="border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="nama">Sort by Nama</option>
+            <option value="nim">Sort by NIM</option>
+            <option value="max_sks">Sort by Max SKS</option>
+          </select>
+
+          {/* Sort Order */}
+          <select
+            value={sortOrder}
+            onChange={(e) => {
+              setSortOrder(e.target.value);
+              setPage(1);
+            }}
+            className="border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="asc">Ascending</option>
+            <option value="desc">Descending</option>
+          </select>
+
+          {/* Items per page */}
+          <select
+            value={perPage}
+            onChange={(e) => {
+              setPerPage(parseInt(e.target.value));
+              setPage(1);
+            }}
+            className="border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="5">5 per halaman</option>
+            <option value="10">10 per halaman</option>
+            <option value="20">20 per halaman</option>
+            <option value="50">50 per halaman</option>
+          </select>
+        </div>
+
+        {/* Results info */}
+        <div className="mb-4 text-sm text-gray-600">
+          Menampilkan {mahasiswa.length} dari {totalCount} total mahasiswa
+          {search && ` (pencarian: "${search}")`}
+        </div>
+
         {mahasiswa.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            Tidak ada data mahasiswa.
+            {search ? `Tidak ada mahasiswa yang ditemukan dengan pencarian "${search}".` : "Tidak ada data mahasiswa."}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -158,7 +245,36 @@ const MahasiswaPage = () => {
               onEdit={handleOpenEditModal}
               onDelete={handleDelete}
               permissions={user?.permissions || []}
+              isLoading={loading}
             />
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-between items-center mt-6 pt-4 border-t">
+            <p className="text-sm text-gray-600">
+              Halaman {page} dari {totalPages} ({totalCount} total data)
+            </p>
+            <div className="flex gap-2">
+              <button
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 transition-colors"
+                onClick={handlePrev}
+                disabled={page === 1}
+              >
+                Previous
+              </button>
+              <span className="px-4 py-2 bg-blue-100 text-blue-700 rounded-md font-medium">
+                {page}
+              </span>
+              <button
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 transition-colors"
+                onClick={handleNext}
+                disabled={page === totalPages}
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
       </div>

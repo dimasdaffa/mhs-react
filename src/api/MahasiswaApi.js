@@ -1,8 +1,8 @@
 import AxiosInstance from './AxiosInstance';
 
-// Mengambil semua data mahasiswa
-export const getAllMahasiswa = () => {
-  return AxiosInstance.get('/mahasiswa');
+// Mengambil semua data mahasiswa dengan support untuk pagination, search, dan sorting
+export const getAllMahasiswa = (params = {}) => {
+  return AxiosInstance.get('/mahasiswa', { params });
 };
 
 // Mengambil satu data mahasiswa berdasarkan ID

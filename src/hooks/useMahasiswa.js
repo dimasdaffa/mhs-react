@@ -7,12 +7,16 @@ import {
 } from '../api/MahasiswaApi';
 import { showSuccessToast, showErrorToast } from '../helpers/toastHelper';
 
-// Ambil semua mahasiswa
-export const useMahasiswa = () =>
+// Ambil semua mahasiswa dengan pagination, search, dan sorting
+export const useMahasiswa = (query = {}) =>
   useQuery({
-    queryKey: ['mahasiswa'],
-    queryFn: getAllMahasiswa,
-    select: (res) => res?.data ?? [],
+    queryKey: ['mahasiswa', query],
+    queryFn: () => getAllMahasiswa(query),
+    select: (res) => ({
+      data: res?.data ?? [],
+      total: parseInt(res.headers['x-total-count'] ?? '0', 10),
+    }),
+    keepPreviousData: true,
   });
 
 // Tambah
