@@ -1,0 +1,393 @@
+{
+  "mahasiswa": [
+    {
+      "id": "1",
+      "nama": "Andi",
+      "nim": "M001",
+      "max_sks": 18
+    },
+    {
+      "id": "2",
+      "nama": "Budi",
+      "nim": "M002",
+      "max_sks": 20
+    },
+    {
+      "id": "3",
+      "nama": "Citra",
+      "nim": "M003",
+      "max_sks": 22
+    },
+    {
+      "id": "4",
+      "nama": "Dina",
+      "nim": "M004",
+      "max_sks": 18
+    },
+    {
+      "id": "5",
+      "nama": "Eko",
+      "nim": "M005",
+      "max_sks": 24
+    },
+    {
+      "id": "6",
+      "nama": "Fajar",
+      "nim": "M006",
+      "max_sks": 21
+    },
+    {
+      "id": "7",
+      "nama": "Gita",
+      "nim": "M007",
+      "max_sks": 20
+    },
+    {
+      "id": "8",
+      "nama": "Hani",
+      "nim": "M008",
+      "max_sks": 18
+    },
+    {
+      "id": "9",
+      "nama": "Iwan",
+      "nim": "M009",
+      "max_sks": 20
+    },
+    {
+      "id": "10",
+      "nama": "Joko",
+      "nim": "M010",
+      "max_sks": 18
+    }
+  ],
+  "dosen": [
+    {
+      "id": "1",
+      "name": "Dr. Slamet",
+      "max_sks": 12,
+      "current_sks": 6,
+      "keahlian": [
+        "Algoritma",
+        "Pemrograman",
+        "Struktur Data"
+      ]
+    },
+    {
+      "id": "2",
+      "name": "Dr. Tini",
+      "max_sks": 10,
+      "current_sks": 3,
+      "keahlian": [
+        "Basis Data",
+        "Data Mining"
+      ]
+    },
+    {
+      "id": "3",
+      "name": "Prof. Udin",
+      "max_sks": 14,
+      "current_sks": 2,
+      "keahlian": [
+        "Jaringan",
+        "Keamanan"
+      ]
+    },
+    {
+      "id": "4",
+      "name": "Dr. Vina",
+      "max_sks": 16,
+      "current_sks": 0,
+      "keahlian": [
+        "Web Development",
+        "Mobile"
+      ]
+    },
+    {
+      "id": "5",
+      "name": "Wildan",
+      "max_sks": 11
+    }
+  ],
+  "mata_kuliah": [
+    {
+      "id": "1",
+      "name": "Algoritma dan Pemrograman",
+      "sks": 3,
+      "semester": 1,
+      "prerequisite": []
+    },
+    {
+      "id": "2",
+      "name": "Basis Data",
+      "sks": 3,
+      "semester": 3,
+      "prerequisite": [
+        "1"
+      ]
+    },
+    {
+      "id": "3",
+      "name": "Jaringan Komputer",
+      "sks": 2,
+      "semester": 4,
+      "prerequisite": []
+    },
+    {
+      "id": "4",
+      "name": "Web Development",
+      "sks": 4,
+      "semester": 5,
+      "prerequisite": [
+        "1",
+        "2"
+      ]
+    },
+    {
+      "id": "5",
+      "name": "Mobile Programming",
+      "sks": 3,
+      "semester": 6,
+      "prerequisite": [
+        "1",
+        "4"
+      ]
+    },
+    {
+      "id": "6",
+      "name": "Komputasi Numerik",
+      "sks": 2
+    }
+  ],
+  "kelas": [
+    {
+      "id": "1",
+      "name": "Kelas A - Algoritma",
+      "kapasitas_mahasiswa": 30,
+      "matakuliah_id": "1",
+      "dosen_id": "1",
+      "mahasiswa_ids": [
+        "1",
+        "2",
+        "3"
+      ],
+      "jadwal": {
+        "hari": "Senin",
+        "jam_mulai": "08:00",
+        "jam_selesai": "11:00",
+        "ruangan": "Lab A"
+      },
+      "status": "aktif"
+    },
+    {
+      "id": "2",
+      "name": "Kelas B - Basis Data",
+      "kapasitas_mahasiswa": 25,
+      "matakuliah_id": "2",
+      "dosen_id": "2",
+      "mahasiswa_ids": [
+        "4"
+      ],
+      "jadwal": {
+        "hari": "Selasa",
+        "jam_mulai": "13:00",
+        "jam_selesai": "16:00",
+        "ruangan": "Lab B"
+      },
+      "status": "aktif"
+    },
+    {
+      "name": "Kelas A - Jaringan",
+      "kapasitas_mahasiswa": 22,
+      "matakuliah_id": "3",
+      "dosen_id": "3",
+      "jadwal": {
+        "hari": "Rabu",
+        "jam_mulai": "09:00",
+        "jam_selesai": "11:00",
+        "ruangan": "Lab C"
+      },
+      "mahasiswa_ids": [],
+      "status": "aktif",
+      "id": "3"
+    },
+    {
+      "id": "4",
+      "name": "Kelas C",
+      "kapasitas_mahasiswa": 20,
+      "matakuliah_id": "6",
+      "dosen_id": "5",
+      "jadwal": {
+        "hari": "Selasa",
+        "jam_mulai": "22:22",
+        "jam_selesai": "22:02",
+        "ruangan": "Lab A"
+      },
+      "mahasiswa_ids": [],
+      "status": "aktif"
+    }
+  ],
+  "users": [
+    {
+      "id": "1",
+      "email": "admin@admin.com",
+      "password": "admin123",
+      "role": "admin",
+      "permissions": [
+        "dashboard.read",
+        "mahasiswa.read",
+        "mahasiswa.create",
+        "mahasiswa.update",
+        "mahasiswa.delete",
+        "mahasiswa-sks.read",
+        "dosen.read",
+        "dosen.create",
+        "dosen.update",
+        "dosen.delete",
+        "mata-kuliah.read",
+        "mata-kuliah.create",
+        "mata-kuliah.update",
+        "mata-kuliah.delete",
+        "kelas.read",
+        "kelas.create",
+        "kelas.update",
+        "kelas.delete",
+        "rencana-studi.page",
+        "rencana-studi.create",
+        "rencana-studi.update",
+        "rencana-studi.delete"
+      ]
+    },
+    {
+      "id": "2",
+      "email": "admin2@admin.com",
+      "password": "admin123",
+      "role": "admin",
+      "permissions": [
+        "dashboard.read",
+        "mahasiswa.read",
+        "mahasiswa.create",
+        "mahasiswa.update",
+        "mahasiswa.delete",
+        "mahasiswa-sks.read",
+        "dosen.read",
+        "dosen.create",
+        "dosen.update",
+        "dosen.delete",
+        "mata-kuliah.read",
+        "mata-kuliah.create",
+        "mata-kuliah.update",
+        "mata-kuliah.delete",
+        "kelas.read",
+        "kelas.create",
+        "kelas.update",
+        "kelas.delete",
+        "rencana-studi.page",
+        "rencana-studi.create",
+        "rencana-studi.update",
+        "rencana-studi.delete"
+      ]
+    }
+  ],
+  "chart": {
+    "students": [
+      {
+        "id": 1,
+        "faculty": "Teknik",
+        "count": 320
+      },
+      {
+        "id": 2,
+        "faculty": "Ekonomi",
+        "count": 210
+      },
+      {
+        "id": 3,
+        "faculty": "Kedokteran",
+        "count": 150
+      },
+      {
+        "id": 4,
+        "faculty": "Hukum",
+        "count": 180
+      },
+      {
+        "id": 5,
+        "faculty": "Ilmu Komputer",
+        "count": 260
+      }
+    ],
+    "genderRatio": [
+      {
+        "id": 1,
+        "gender": "Laki-laki",
+        "count": 600
+      },
+      {
+        "id": 2,
+        "gender": "Perempuan",
+        "count": 700
+      }
+    ],
+    "registrations": [
+      {
+        "id": 1,
+        "year": 2020,
+        "total": 500
+      },
+      {
+        "id": 2,
+        "year": 2021,
+        "total": 580
+      },
+      {
+        "id": 3,
+        "year": 2022,
+        "total": 640
+      },
+      {
+        "id": 4,
+        "year": 2023,
+        "total": 710
+      }
+    ],
+    "gradeDistribution": [
+      {
+        "subject": "TI",
+        "A": 120,
+        "B": 80,
+        "C": 40
+      },
+      {
+        "subject": "SI",
+        "A": 100,
+        "B": 90,
+        "C": 50
+      },
+      {
+        "subject": "MI",
+        "A": 110,
+        "B": 85,
+        "C": 30
+      }
+    ],
+    "lecturerRanks": [
+      {
+        "rank": "Asisten Ahli",
+        "count": 30
+      },
+      {
+        "rank": "Lektor",
+        "count": 50
+      },
+      {
+        "rank": "Lektor Kepala",
+        "count": 40
+      },
+      {
+        "rank": "Guru Besar",
+        "count": 10
+      }
+    ]
+  }
+}
